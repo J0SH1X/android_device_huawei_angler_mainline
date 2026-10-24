@@ -76,3 +76,7 @@ PRODUCT_SHIPPING_API_LEVEL := 33
 PRODUCT_SOONG_NAMESPACES += \
     $(DEVICE_PATH) \
     kernel/mainline/configs
+
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/fstab.angler:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.angler \
+    $(DEVICE_PATH)/fstab.angler:$(TARGET_COPY_OUT)/ramdisk/fstab.angler
