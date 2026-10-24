@@ -4,21 +4,21 @@
 //
 
 prebuilt_etc {
-    name: "init.agassi.rc",
-    src: "init.agassi.rc",
+    name: "init.angler.rc",
+    src: "init.angler.rc",
     sub_dir: "init/hw",
     vendor: true,
 }
 
 prebuilt_etc {
-    name: "init.recovery.agassi.rc",
-    src: "init.recovery.agassi.rc",
+    name: "init.recovery.angler.rc",
+    src: "init.recovery.angler.rc",
     sub_dir: "init",
     recovery: true,
 }
 
 prebuilt_etc {
-    name: "ueventd.agassi.rc",
-    src: "ueventd.agassi.rc",
+    name: "ueventd.angler.rc",
+    src: "ueventd.angler.rc",
     vendor: true,
 }

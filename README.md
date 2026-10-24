@@ -1,4 +1,4 @@
-# Android device tree for huawei-agassi with mainline kernel
+# Android device tree for huawei-angler with mainline kernel
 
 ## Kernel repository
 

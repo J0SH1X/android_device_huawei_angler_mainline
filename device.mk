@@ -3,10 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-DEVICE_PATH := device/huawei/agassi_mainline
+DEVICE_PATH := device/huawei/angler_mainline
+PRODUCT_USE_DYNAMIC_PARTITIONS := true
+
 
 # Inherit options from mainline/qcom-common
-TARGET_QCOM_SOC := msm8917
+TARGET_QCOM_SOC := msm8994
 ## TODO: Bringup the corresponding hardware and remove the following definitions
 TARGET_AUDIO_HAL := default-aidl
 TARGET_LIGHT_HAL := none
@@ -21,12 +23,12 @@ PRODUCT_AAPT_PREF_CONFIG := mdpi
 
 # Audio
 PRODUCT_PACKAGES += \
-    audio.agassi_mainline.xml
+    audio.angler_mainline.xml
 
 # Bootanimation
 TARGET_BOOTANIMATION_HALF_RES := true
-TARGET_SCREEN_HEIGHT := 1280
-TARGET_SCREEN_WIDTH := 800
+TARGET_SCREEN_HEIGHT := 2560
+TARGET_SCREEN_WIDTH := 1440
 
 # Dalvik heap
 $(call inherit-product, frameworks/native/build/phone-xhdpi-2048-dalvik-heap.mk)
@@ -37,9 +39,9 @@ PRODUCT_PACKAGES += \
 
 # Init
 PRODUCT_PACKAGES += \
-    init.agassi.rc \
-    init.recovery.agassi.rc \
-    ueventd.agassi.rc
+    init.angler.rc \
+    init.recovery.angler.rc \
+    ueventd.angler.rc
 
 PRODUCT_PACKAGES += \
     use_memfd.rc \

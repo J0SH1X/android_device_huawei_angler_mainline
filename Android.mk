@@ -5,6 +5,6 @@
 
 LOCAL_PATH := $(call my-dir)
 
-ifeq ($(USES_DEVICE_HUAWEI_AGASSI),true)
+ifeq ($(USES_DEVICE_HUAWEI_ANGLER),true)
 
 endif

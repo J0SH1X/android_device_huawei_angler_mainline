@@ -11,10 +11,10 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
 $(call inherit-product, vendor/lineage/config/common_full_tablet.mk)
 
 # Inherit from device
-$(call inherit-product, device/huawei/agassi_mainline/device.mk)
+$(call inherit-product, device/huawei/angler_mainline/device.mk)
 
-PRODUCT_NAME := lineage_agassi_mainline
-PRODUCT_DEVICE := agassi_mainline
+PRODUCT_NAME := lineage_angler_mainline
+PRODUCT_DEVICE := angler_mainline
 PRODUCT_BRAND := Huawei
 PRODUCT_MANUFACTURER := Huawei
-PRODUCT_MODEL := Mediapad T3 10
+PRODUCT_MODEL := Nexus 6P

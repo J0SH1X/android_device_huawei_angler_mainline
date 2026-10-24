@@ -4,7 +4,7 @@
 //
 
 prebuilt_etc {
-    name: "audio.agassi_mainline.xml",
-    src: "audio.agassi_mainline.xml",
+    name: "audio.angler_mainline.xml",
+    src: "audio.angler_mainline.xml",
     vendor: true,
 }

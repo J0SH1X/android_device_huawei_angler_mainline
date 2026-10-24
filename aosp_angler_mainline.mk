@@ -8,10 +8,10 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit_only.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
 
 # Inherit from device
-$(call inherit-product, device/huawei/agassi_mainline/device.mk)
+$(call inherit-product, device/huawei/angler_mainline/device.mk)
 
-PRODUCT_NAME := aosp_agassi_mainline
-PRODUCT_DEVICE := agassi_mainline
-PRODUCT_BRAND := Huawei
-PRODUCT_MANUFACTURER := Huawei
-PRODUCT_MODEL := Mediapad T3 10
+PRODUCT_NAME := aosp_angler_mainline
+PRODUCT_DEVICE := angler_mainline
+PRODUCT_BRAND := huawei
+PRODUCT_MANUFACTURER := huawei
+PRODUCT_MODEL := Nexus 6P

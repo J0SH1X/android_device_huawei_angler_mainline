@@ -4,8 +4,8 @@
 //
 
 prebuilt_etc {
-    name: "fstab.agassi",
-    src: "fstab.agassi",
+    name: "fstab.angler",
+    src: "fstab.angler",
     vendor: true,
     ramdisk_available: true,
 }
