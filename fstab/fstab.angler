@@ -25,7 +25,7 @@ system_ext  /system_ext    ext4    ro,barrier=1        wait,logical,first_stage_
 /devices/platform/soc@0/78db000.usb/*/usb* auto auto defaults voldmanaged=usb:auto,noemulatedsd
 
 # Userdata
-/dev/block/by-name/metadata /metadata ext4 nodev,noatime,nosuid,discard,data=journal,commit=1 check,formattable,first_stage_mount,metadata_csum
+/dev/block/by-name/vendor /metadata ext4 nodev,noatime,nosuid,discard,data=journal,commit=1 check,formattable,first_stage_mount,metadata_csum
 /dev/block/by-name/userdata /data ext4 nodev,noatime,nosuid,discard latemount,check,quota,formattable
 
 # ZRAM
