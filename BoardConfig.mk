@@ -97,6 +97,8 @@ BOARD_SUPER_PARTITION_GROUPS := qcom_dynamic_partitions
 BOARD_QCOM_DYNAMIC_PARTITIONS_SIZE := 3141533696
 BOARD_QCOM_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product system_ext
 
+include vendor/lineage/config/BoardConfigReservedSize.mk
+
 # Properties
 TARGET_VENDOR_PROP += $(DEVICE_PATH)/properties/vendor.prop
 
