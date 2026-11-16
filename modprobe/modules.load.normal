@@ -1,8 +1,11 @@
 qcom_pil_info.ko
 qcom_q6v5.ko
-slim-qcom-ngd-ctrl.ko
-qcom_wcnss_pil.ko
-qcom_q6v5_adsp.ko
+qcom_common.ko
+ipa-legacy.ko
 qcom_q6v5_pas.ko
 qcom_q6v5_mss.ko
-qcom_q6v5_wcss.ko
+brcmfmac.ko
+brcmfmac-wcc.ko
+hci_uart.ko
+leds-qcom-lpg.ko
+qcom-pmi8994-haptics.ko
