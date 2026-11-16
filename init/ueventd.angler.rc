@@ -5,4 +5,23 @@
 
 firmware_directories /vendor/firmware_mnt/image/ /odm/firmware/
 
-modalias_handling enabled
+modalias_handling disabled
+
+# Light HAL: timer trigger attributes only appear once the trigger is set
+/sys/class/leds/*:status    delay_on     0664    system    system
+/sys/class/leds/*:status    delay_off    0664    system    system
+
+# QMUX control port (DATA5_CNTL via rpmsg_wwan_ctrl) for the radio HAL
+/dev/wwan*qmi*              0660    radio      radio
+
+# sensor hub (nanohub) for the sensors HAL
+/dev/nanohub              0660    system     system
+/dev/nanohub_comms        0660    system     system
+
+# FPC1020 fingerprint (kernel driver pending): TZ transport + sensor attributes for the HAL
+/dev/qseecom-lite         0660    system     system
+/sys/devices/platform/*fpc1020*   clk_enable      0660  system  system
+/sys/devices/platform/*fpc1020*   irq             0660  system  system
+/sys/devices/platform/*fpc1020*   wakeup_enable   0660  system  system
+# eMMC RPMB: relayed for the QSEE keymaster/gatekeeper by the fingerprint HAL
+/dev/mmcblk*rpmb          0600    system     system
