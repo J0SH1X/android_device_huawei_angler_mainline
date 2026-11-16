@@ -1,0 +1,163 @@
+/*
+ * QMI transport for the angler radio HAL.
+ *
+ * One GLib thread owns the QRTR bus, the QmiDevice and all QMI clients.
+ * Binder methods hand work to a per-interface SerialExecutor; that worker
+ * starts an async libqmi request on the GLib thread and waits for its result.
+ * Indications are delivered on the GLib thread.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+#pragma once
+
+#include <atomic>
+#include <condition_variable>
+#include <deque>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <type_traits>
+#include <vector>
+
+#include <libqmi-glib.h>
+
+namespace angler::radio {
+
+/* Runs queued jobs in order on its own thread. */
+class SerialExecutor {
+  public:
+    explicit SerialExecutor(std::string name);
+    ~SerialExecutor();
+    void post(std::function<void()> job);
+
+  private:
+    void loop();
+    std::string mName;
+    std::mutex mLock;
+    std::condition_variable mCond;
+    std::deque<std::function<void()>> mJobs;
+    bool mStop = false;
+    std::thread mThread;
+};
+
+class QmiModem {
+  public:
+    static QmiModem& get();
+
+    /* Starts the GLib thread and connects in the background. */
+    void start();
+    bool isReady() const { return mReady; }
+    /* Called (on the GLib thread) once all clients are allocated. */
+    void onReady(std::function<void()> cb);
+
+    /* Run fn on the GLib thread and wait for it to finish. */
+    void runOnLoop(std::function<void()> fn);
+
+    /*
+     * Start an async libqmi operation on the GLib thread and wait for its
+     * GAsyncResult (caller unrefs). Returns nullptr on timeout.
+     */
+    GAsyncResult* call(std::function<void(GAsyncReadyCallback, gpointer)> start,
+                       unsigned timeoutMs = 30000);
+
+    /* Connect a GObject signal of a QMI client (handler runs on GLib thread). */
+    template <typename Output>
+    void onIndication(QmiClient* client, const char* signal,
+                      std::function<void(Output*)> handler) {
+        auto* h = new std::function<void(Output*)>(std::move(handler));
+        runOnLoop([client, signal, h] {
+            g_signal_connect_data(client, signal,
+                                  G_CALLBACK(+[](QmiClient*, Output* out, gpointer ud) {
+                                      (*static_cast<std::function<void(Output*)>*>(ud))(out);
+                                  }),
+                                  h, nullptr, GConnectFlags(0));
+        });
+    }
+
+    QmiClientDms* dms = nullptr;
+    QmiClientNas* nas = nullptr;
+    QmiClientUim* uim = nullptr;
+    QmiClientWms* wms = nullptr;
+    QmiClientVoice* voice = nullptr;
+    QmiClientWds* wds = nullptr;
+    QmiClientWda* wda = nullptr;
+    QmiClientDpm* dpm = nullptr;  /* over QRTR, holds DATA5_CNTL open */
+    /* DPM OPEN_PORT (DATA5_CNTL + hw data endpoint) done */
+    std::atomic<bool> dpmPortOpen = false;
+
+  private:
+    QmiModem() = default;
+    void glibThread();
+    bool connectOnce();
+    QmiClient* allocate(QmiService service, bool required);
+    QmiClient* allocateOn(QmiDevice* device, QmiService service, bool required);
+    bool openQmuxPort();
+    void closeQmux();
+
+    GMainContext* mContext = nullptr;
+    GMainLoop* mLoop = nullptr;
+    std::thread mGlibThread;
+    std::thread mConnectThread;
+    QrtrBus* mBus = nullptr;
+    QmiDevice* mQrtrDevice = nullptr; /* DPM */
+    QmiDevice* mDevice = nullptr;     /* QMUX on /dev/wwan0qmi0 */
+    std::atomic<bool> mReady = false;
+    std::mutex mReadyLock;
+    std::vector<std::function<void()>> mReadyCallbacks;
+};
+
+/* Deleter-carrying owner for libqmi output messages. */
+template <typename Out>
+using QmiOut = std::unique_ptr<Out, void (*)(Out*)>;
+
+/*
+ * Synchronous libqmi request. Returns null (and sets *error) on transport
+ * failure, timeout or a QMI error result.
+ */
+template <typename C, typename In, typename Out>
+QmiOut<Out> qmiSync(C* client,
+                    void (*start)(C*, In, guint, GCancellable*, GAsyncReadyCallback, gpointer),
+                    Out* (*finish)(C*, GAsyncResult*, GError**),
+                    gboolean (*getResult)(Out*, GError**), void (*unref)(Out*),
+                    std::type_identity_t<In> input, GError** error, guint timeoutSec = 10) {
+    if (!client) {
+        g_set_error(error, QMI_CORE_ERROR, QMI_CORE_ERROR_WRONG_STATE, "client not allocated");
+        return QmiOut<Out>(nullptr, unref);
+    }
+    GAsyncResult* res = QmiModem::get().call(
+            [&](GAsyncReadyCallback cb, gpointer ud) {
+                start(client, input, timeoutSec, nullptr, cb, ud);
+            },
+            (timeoutSec + 5) * 1000);
+    if (!res) {
+        g_set_error(error, QMI_CORE_ERROR, QMI_CORE_ERROR_TIMEOUT, "request timed out");
+        return QmiOut<Out>(nullptr, unref);
+    }
+    Out* out = finish(client, res, error);
+    g_object_unref(res);
+    if (!out) return QmiOut<Out>(nullptr, unref);
+    if (!getResult(out, error)) {
+        unref(out);
+        return QmiOut<Out>(nullptr, unref);
+    }
+    return QmiOut<Out>(out, unref);
+}
+
+#define QMI_SYNC(svc, op, client, input, errp)                                                   \
+    ::angler::radio::qmiSync(client, qmi_client_##svc##_##op, qmi_client_##svc##_##op##_finish,  \
+                             qmi_message_##svc##_##op##_output_get_result,                       \
+                             qmi_message_##svc##_##op##_output_unref, input, errp)
+
+/* Small helpers */
+std::string bytesToHex(const uint8_t* data, size_t len);
+std::string garrayToHex(GArray* array);
+std::vector<uint8_t> hexToBytes(const std::string& hex);
+GArray* hexToGArray(const std::string& hex);
+std::string ipv4ToString(uint32_t addr);
+std::string ipv6ToString(GArray* addr);
+/* "3F007FFF" -> QMI UIM path (each 16-bit element little endian) */
+GArray* simPathToGArray(const std::string& path);
+
+}  // namespace angler::radio

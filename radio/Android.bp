@@ -1,0 +1,97 @@
+//
+// QMI (QRTR) radio HAL for huawei/angler on a mainline kernel.
+// libminradio/ is a copy of hardware/interfaces/radio/aidl/minradio/libminradio
+// (Apache-2.0) built without the sanitizers the upstream library forces on.
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+cc_defaults {
+    name: "angler_qmiril_defaults",
+    vendor: true,
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Wno-unused-parameter",
+        "-Wno-missing-field-initializers",
+        "-DANDROID_UTILS_REF_BASE_DISABLE_IMPLICIT_CONSTRUCTION",
+        "-D_LIBCPP_DISABLE_DEPRECATION_WARNINGS",
+    ],
+    shared_libs: [
+        "android.hardware.radio.config-V4-ndk",
+        "android.hardware.radio.data-V4-ndk",
+        "android.hardware.radio.messaging-V4-ndk",
+        "android.hardware.radio.modem-V4-ndk",
+        "android.hardware.radio.network-V4-ndk",
+        "android.hardware.radio.sim-V4-ndk",
+        "android.hardware.radio.voice-V4-ndk",
+        "libbase",
+        "libbinder_ndk",
+        "libcutils",
+        "libutils",
+    ],
+}
+
+cc_library_static {
+    name: "libminradio_angler",
+    defaults: ["angler_qmiril_defaults"],
+    export_include_dirs: ["libminradio/include"],
+    srcs: [
+        "libminradio/RadioSlotBase.cpp",
+        "libminradio/ResponseTracker.cpp",
+        "libminradio/SlotContext.cpp",
+        "libminradio/config/RadioConfig.cpp",
+        "libminradio/data/RadioData.cpp",
+        "libminradio/modem/RadioModem.cpp",
+        "libminradio/network/RadioNetwork.cpp",
+        "libminradio/network/RadioNetworkResponseTracker.cpp",
+        "libminradio/network/structs.cpp",
+        "libminradio/response.cpp",
+        "libminradio/sim/apps/AraM.cpp",
+        "libminradio/sim/apps/FilesystemApp.cpp",
+        "libminradio/sim/apps/tlv.cpp",
+        "libminradio/sim/App.cpp",
+        "libminradio/sim/AppManager.cpp",
+        "libminradio/sim/Filesystem.cpp",
+        "libminradio/sim/IccUtils.cpp",
+        "libminradio/sim/RadioSim.cpp",
+    ],
+}
+
+cc_binary {
+    name: "android.hardware.radio-service.qmi",
+    defaults: ["angler_qmiril_defaults"],
+    relative_install_path: "hw",
+    init_rc: ["android.hardware.radio-service.qmi.rc"],
+    vintf_fragments: ["android.hardware.radio-service.qmi.xml"],
+    cflags: [
+        "-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_56",
+        "-DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_56",
+        "-DGLIB_DISABLE_DEPRECATION_WARNINGS",
+        "-Wno-cast-function-type",
+    ],
+    srcs: [
+        "src/Qmi.cpp",
+        "src/RadioConfig.cpp",
+        "src/RadioData.cpp",
+        "src/RadioMessaging.cpp",
+        "src/RadioModem.cpp",
+        "src/RadioNetwork.cpp",
+        "src/RadioSim.cpp",
+        "src/RadioVoice.cpp",
+        "src/State.cpp",
+        "src/service.cpp",
+    ],
+    static_libs: ["libminradio_angler"],
+    shared_libs: [
+        "libgio-2.0",
+        "libglib-2.0",
+        "libgobject-2.0",
+        "libqmi-glib",
+        "libqrtr-glib",
+    ],
+}
