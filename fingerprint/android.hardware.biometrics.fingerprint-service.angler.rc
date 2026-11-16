@@ -1,0 +1,10 @@
+service vendor.fingerprint-angler /vendor/bin/hw/android.hardware.biometrics.fingerprint-service.angler
+    class hal
+    user system
+    group system uhid
+    # one shot: if the kernel driver is not there yet we exit instead of crash-looping
+    oneshot
+
+on post-fs-data
+    mkdir /data/vendor/fpc 0700 system system
+    restorecon_recursive /data/vendor/fpc

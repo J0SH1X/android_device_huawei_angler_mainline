@@ -1,0 +1,94 @@
+//
+// AIDL fingerprint HAL for the FPC1020 on huawei/angler with a mainline kernel.
+// See README.md; protocol: fingerprint-re/protocol-notes.md.
+//
+// SPDX-FileCopyrightText: The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+cc_defaults {
+    name: "angler_fpc_defaults",
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Wno-unused-parameter",
+    ],
+    local_include_dirs: ["include"],
+}
+
+// Everything that does not need binder/AIDL: TA protocol, sensor sysfs, FS listener, transport.
+cc_library_static {
+    name: "libangler_fpc_core",
+    defaults: ["angler_fpc_defaults"],
+    vendor: true,
+    export_include_dirs: ["include"],
+    srcs: [
+        "src/FpcSensor.cpp",
+        "src/FpcTa.cpp",
+        "src/FsListener.cpp",
+        "src/QseecomLiteChannel.cpp",
+        "src/RpmbListener.cpp",
+    ],
+    shared_libs: ["libbase"],
+}
+
+// Host-testable subset (no sysfs, no qseecom device).
+cc_library_static {
+    name: "libangler_fpc_proto",
+    defaults: ["angler_fpc_defaults"],
+    host_supported: true,
+    vendor_available: true,
+    export_include_dirs: ["include"],
+    srcs: [
+        "src/FpcTa.cpp",
+        "src/FsListener.cpp",
+    ],
+    shared_libs: ["libbase"],
+}
+
+cc_binary {
+    name: "android.hardware.biometrics.fingerprint-service.angler",
+    defaults: ["angler_fpc_defaults"],
+    vendor: true,
+    relative_install_path: "hw",
+    init_rc: ["android.hardware.biometrics.fingerprint-service.angler.rc"],
+    vintf_fragments: ["android.hardware.biometrics.fingerprint-service.angler.xml"],
+    srcs: [
+        "src/main.cpp",
+        "src/Fingerprint.cpp",
+        "src/Session.cpp",
+        "src/FpcEngine.cpp",
+        "src/Hat.cpp",
+        "src/SharedSecret.cpp",
+        "src/QseeGatekeeper.cpp",
+        "src/NavInput.cpp",
+    ],
+    static_libs: ["libangler_fpc_core"],
+    shared_libs: [
+        "android.hardware.biometrics.common-V4-ndk",
+        "android.hardware.biometrics.fingerprint-V5-ndk",
+        "android.hardware.keymaster-V4-ndk",
+        "android.hardware.security.sharedsecret-V1-ndk",
+        "libbase",
+        "libbinder_ndk",
+        "libcrypto",
+        "libkeymaster_portable",
+        "liblog",
+    ],
+}
+
+cc_test_host {
+    name: "angler_fpc_proto_test",
+    defaults: ["angler_fpc_defaults"],
+    srcs: [
+        "tests/FsListenerTest.cpp",
+        "tests/FpcTaTest.cpp",
+    ],
+    static_libs: ["libangler_fpc_proto"],
+    shared_libs: ["libbase"],
+    test_suites: ["general-tests"],
+}
