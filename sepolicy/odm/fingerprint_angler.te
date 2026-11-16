@@ -1,0 +1,30 @@
+# FPC1020 fingerprint HAL (android.hardware.biometrics.fingerprint-service.angler)
+# Reuses the platform's hal_fingerprint_default domain; only the device specific resources are new.
+
+type fpc_qseecom_device, dev_type;
+type sysfs_fpc, sysfs_type, fs_type;
+type fpc_vendor_data_file, file_type, data_file_type;
+
+# TrustZone transport + sensor attributes
+allow hal_fingerprint_default fpc_qseecom_device:chr_file rw_file_perms;
+allow hal_fingerprint_default sysfs_fpc:dir r_dir_perms;
+allow hal_fingerprint_default sysfs_fpc:file rw_file_perms;
+
+# template db (written on behalf of the TA by the FS listener) + TA images (read only)
+allow hal_fingerprint_default fpc_vendor_data_file:dir create_dir_perms;
+allow hal_fingerprint_default fpc_vendor_data_file:file create_file_perms;
+allow hal_fingerprint_default vendor_data_file:dir search;
+
+# HAT key agreement: the HAL serves ISharedSecret/fingerprint (labelled hal_fingerprint_service in
+# service_contexts) and keystore2 drives the negotiation, as mainline common does for gatekeeper.
+hal_client_domain(keystore, hal_fingerprint)
+
+# RPMB relay (QSEE listener 0x2000): TrustZone authenticates every frame, the HAL only relays them
+type fpc_rpmb_device, dev_type;
+allow hal_fingerprint_default fpc_rpmb_device:chr_file rw_file_perms;
+allow hal_fingerprint_default fpc_rpmb_device:chr_file ioctl;
+allow hal_fingerprint_default sysfs:file r_file_perms;
+
+# Navigation gestures: uinput-fpc key device
+allow hal_fingerprint_default uhid_device:chr_file rw_file_perms;
+allow hal_fingerprint_default uhid_device:chr_file ioctl;

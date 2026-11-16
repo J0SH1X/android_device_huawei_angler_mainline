@@ -6,3 +6,10 @@
 /dev/block/by-name/recovery	u:object_r:recovery_block_device:s0
 /dev/block/by-name/system	u:object_r:system_block_device:s0
 /dev/block/by-name/userdata	u:object_r:userdata_block_device:s0
+
+# QMI radio HAL
+/vendor/bin/hw/android\.hardware\.radio-service\.qmi	u:object_r:hal_radio_default_exec:s0
+/(vendor|system/vendor)/bin/hw/android\.hardware\.biometrics\.fingerprint-service\.angler  u:object_r:hal_fingerprint_default_exec:s0
+/dev/qseecom-lite                                                                         u:object_r:fpc_qseecom_device:s0
+/data/vendor/fpc(/.*)?                                                                    u:object_r:fpc_vendor_data_file:s0
+/dev/mmcblk[0-9]rpmb                                                                      u:object_r:fpc_rpmb_device:s0

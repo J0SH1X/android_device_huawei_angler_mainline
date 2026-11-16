@@ -1,0 +1,1 @@
+genfscon sysfs /devices/platform/fpc1020 u:object_r:sysfs_fpc:s0
