@@ -36,24 +36,6 @@ protocol recovered in `fingerprint-re/protocol-notes.md`. No stock userspace is 
 
 If `/dev/qseecom-lite` or the sensor is missing the service logs and exits (it is `oneshot`).
 
-## Open points / ASSUMED (all documented in `include/FpcProtocol.h` or marked in the code)
-
-- Result codes: 0 = success; identify match = status 0 and fid != 0; enrol good sample = status 0;
-  update_template > 0 = template changed (db re-stored); finger_lost > 0 = lifted; the irq itself is
-  the finger-down event (0x08 result is not interpreted).
-- FS listener: `write` (0x208) argument layout (fd@4, n@8, data@0xc) and `statfs` (0x218) response
-  are guesses; `fcntl`, `unlinkat`, `openat`, dir iteration, `chown/chmod` (0x214) are refused
-  (`-ENOSYS`). Stat response is the 0x68-byte 32-bit ARM `stat64`. Watch the log for
-  "unsupported fs listener command" on first bring-up.
-- Keymaster response layout ({status, offset, len} at the start of the response, key at
-  response + offset) is bounds-checked but unverified.
-  On a mainline userspace the keystore HMAC key may not be the one the QSEE keymaster holds; if HATs
-  are rejected by keystore that is the first suspect.
-- `invalidateAuthenticatorId` cannot force a new id (no TA command known); it reports the current one.
-- Cancelling an enrol after some samples leaves the TA in enrol state; the next `begin_enrol` is
-  expected to reset it.
-- Lockout is HAL-side (5 failures: 30 s, 20: permanent until `resetLockout`).
-
 ## Storage
 
 Template db per user: `/data/vendor/fpc/user_<id>.db` (written by the TA through the FS listener as
