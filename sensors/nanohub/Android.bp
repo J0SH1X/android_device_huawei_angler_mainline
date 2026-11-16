@@ -1,0 +1,26 @@
+//
+// SPDX-FileCopyrightText: The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// nanohub (angler sensor hub, /dev/nanohub) backend for the mainline_ext
+// Sensors HAL. Bundled into com.android.hardware.sensors.mainline_ext via
+// sensors_hal_mainline/include_custom_backends (see device.mk).
+cc_library_shared {
+    name: "libsensors_ext_nanohub",
+    vendor: true,
+    srcs: ["NanohubBackend.cpp"],
+    header_libs: ["//hardware/mainline/common-ext:libsensors_mainline_ext_headers"],
+    static_libs: ["//hardware/mainline/common-ext:libsensors_ext_common"],
+    shared_libs: [
+        "android.hardware.sensors-V3-ndk",
+        "libbase",
+        "liblog",
+    ],
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fvisibility=hidden",
+    ],
+}
