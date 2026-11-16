@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     SPDX-FileCopyrightText: The Android Open Source Project
+     SPDX-FileCopyrightText: The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+
+     Nexus 6P (angler) primary module for the AOSP AIDL example HAL.
+     Based on the default (cuttlefish) primary configuration, plus:
+       - Earpiece (top MAX98925 switched to the receiver by GPIO32)
+       - hardware voice routes: Telephony Rx -> Earpiece / Speaker and
+         Built-In Mic -> Telephony Tx. Call audio is routed by the ADSP (q6voice CS-Voice),
+         the HAL starts it when the framework creates the device-to-device patch
+         (see /vendor/etc/audio_voice_paths.conf).
+-->
+<module name="primary" halVersion="3.0">
+    <attachedDevices>
+        <item>Earpiece</item>
+        <item>Speaker</item>
+        <item>Built-In Mic</item>
+        <item>Telephony Tx</item>
+        <item>Telephony Rx</item>
+    </attachedDevices>
+    <defaultOutputDevice>Speaker</defaultOutputDevice>
+    <mixPorts>
+        <mixPort name="primary output" role="source" flags="AUDIO_OUTPUT_FLAG_PRIMARY">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="8000 11025 16000 32000 44100 48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_MONO AUDIO_CHANNEL_OUT_STEREO"/>
+        </mixPort>
+        <mixPort name="primary input" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="8000 11025 16000 32000 44100 48000"
+                     channelMasks="AUDIO_CHANNEL_IN_MONO AUDIO_CHANNEL_IN_STEREO"/>
+        </mixPort>
+        <mixPort name="telephony_tx" role="source">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_MONO"/>
+        </mixPort>
+        <mixPort name="telephony_rx" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT"
+                     samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_IN_MONO"/>
+        </mixPort>
+    </mixPorts>
+    <devicePorts>
+        <devicePort tagName="Earpiece" type="AUDIO_DEVICE_OUT_EARPIECE" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_MONO AUDIO_CHANNEL_OUT_STEREO"/>
+        </devicePort>
+        <devicePort tagName="Speaker" type="AUDIO_DEVICE_OUT_SPEAKER" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_MONO AUDIO_CHANNEL_OUT_STEREO"/>
+        </devicePort>
+        <devicePort tagName="Telephony Tx" type="AUDIO_DEVICE_OUT_TELEPHONY_TX" role="sink">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_OUT_MONO AUDIO_CHANNEL_OUT_STEREO"/>
+        </devicePort>
+        <devicePort tagName="Built-In Mic" type="AUDIO_DEVICE_IN_BUILTIN_MIC" address="bottom" role="source">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_IN_MONO AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+        <devicePort tagName="Telephony Rx" type="AUDIO_DEVICE_IN_TELEPHONY_RX" role="source">
+            <profile name="" format="AUDIO_FORMAT_PCM_16_BIT" samplingRates="8000 16000 48000"
+                     channelMasks="AUDIO_CHANNEL_IN_MONO AUDIO_CHANNEL_IN_STEREO"/>
+        </devicePort>
+    </devicePorts>
+    <routes>
+        <route type="mix" sink="Earpiece"
+               sources="primary output,Telephony Rx"/>
+        <route type="mix" sink="Speaker"
+               sources="primary output,Telephony Rx"/>
+        <route type="mix" sink="primary input"
+               sources="Built-In Mic"/>
+        <route type="mix" sink="telephony_rx"
+               sources="Telephony Rx"/>
+        <route type="mix" sink="Telephony Tx"
+               sources="telephony_tx,Built-In Mic"/>
+    </routes>
+</module>

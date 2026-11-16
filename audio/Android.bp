@@ -8,3 +8,16 @@ prebuilt_etc {
     src: "audio.angler_mainline.xml",
     vendor: true,
 }
+
+prebuilt_etc {
+    name: "primary_audio_policy_configuration.angler_mainline.xml",
+    src: "primary_audio_policy_configuration.xml",
+    filename: "primary_audio_policy_configuration.xml",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "audio_voice_paths.conf",
+    src: "audio_voice_paths.conf",
+    vendor: true,
+}
