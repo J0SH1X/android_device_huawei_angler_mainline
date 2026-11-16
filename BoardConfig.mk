@@ -14,13 +14,12 @@ AB_OTA_UPDATER := false
 
 # Bootloader
 BOARD_BOOT_HEADER_VERSION := 2
-#BOARD_CUSTOM_BOOTIMG := true
-#BOARD_CUSTOM_BOOTIMG_MK := $(DEVICE_PATH)/mkbootimg.mk
+BOARD_CUSTOM_BOOTIMG := true
+BOARD_CUSTOM_BOOTIMG_MK := $(DEVICE_PATH)/mkbootimg.mk
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
-#TARGET_LK2ND_MAKE_FLAGS := \
-#    LK2ND_ADTBS=msm8994-huawei-angler.dtb \
-#    LK2ND_COMPATIBLE=huawei,angler \
-#    OSVERSION_IN_BOOTIMAGE=1
+TARGET_LK2ND_PLATFORM := msm8994
+TARGET_LK2ND_MAKE_FLAGS := \
+    OSVERSION_IN_BOOTIMAGE=1
 
 # Boot parameters
 BOARD_KERNEL_CMDLINE := \
@@ -34,9 +33,7 @@ BOARD_KERNEL_CMDLINE := \
     androidboot.super_partition=system
 
 BOARD_KERNEL_CMDLINE += \
-    androidboot.selinux=permissive \
-    audit=0 \
-    lk2nd.spin-table=force
+    audit=0
 
 # Display
 TARGET_SCREEN_DENSITY := 518
@@ -60,6 +57,10 @@ BOARD_RECOVERY_RAMDISK_KERNEL_MODULES_LOAD := \
     $(strip $(shell cat $(DEVICE_PATH)/modprobe/modules.load.basic)) \
     $(strip $(shell cat $(DEVICE_PATH)/modprobe/modules.load.drm)) \
     $(strip $(shell cat $(DEVICE_PATH)/modprobe/modules.load.touchscreen))
+# ueventd must not modalias-load modules that request firmware while probing: it would
+# block on its own sysfs-fallback request (60 s stall each). They load via modules.load.normal.
+BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := $(DEVICE_PATH)/modprobe/modules.blocklist
+
 BOARD_VENDOR_KERNEL_MODULES_LOAD := \
     $(BOARD_RECOVERY_RAMDISK_KERNEL_MODULES_LOAD)
 RECOVERY_KERNEL_MODULES := \
@@ -68,6 +69,11 @@ RECOVERY_KERNEL_MODULES := \
     $(strip $(shell cat $(DEVICE_PATH)/modprobe/modules.include_dep.touchscreen)) \
     $(BOARD_RECOVERY_RAMDISK_KERNEL_MODULES_LOAD)
 
+# Auto-collect transitive deps (modinfo) for the recovery ramdisk, since
+# DRM_MSM=m pulls promptless tristate deps (drm_exec, drm_gpuvm, gpu-sched,
+# mdt_loader, ubwc_config, ...) out of vmlinux into modules.
+TARGET_AUTO_COLLECT_KERNEL_MODULE_DEPS := true
+
 # OTA
 TARGET_OTA_ASSERT_DEVICE := angler,angler_mainline
 
@@ -75,7 +81,7 @@ TARGET_OTA_ASSERT_DEVICE := angler,angler_mainline
 BOARD_BOOTIMAGE_PARTITION_SIZE := 32768000
 BOARD_CACHEIMAGE_PARTITION_SIZE := 102400000
 BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_RECOVERYIMAGE_PARTITION_SIZE := 32768000
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 33554432  # real 32 MiB recovery partition
 
 BOARD_SUPER_PARTITION_METADATA_DEVICE := system
 BOARD_SUPER_PARTITION_BLOCK_DEVICES := system
@@ -97,13 +103,13 @@ BOARD_SUPER_PARTITION_GROUPS := qcom_dynamic_partitions
 BOARD_QCOM_DYNAMIC_PARTITIONS_SIZE := 3141533696
 BOARD_QCOM_DYNAMIC_PARTITIONS_PARTITION_LIST := system vendor product system_ext
 
-include vendor/lineage/config/BoardConfigReservedSize.mk
+#include vendor/lineage/config/BoardConfigReservedSize.mk
 
 # Properties
 TARGET_VENDOR_PROP += $(DEVICE_PATH)/properties/vendor.prop
 
 # Ramdisk
-BOARD_RAMDISK_USE_LZ4 := true
+BOARD_RAMDISK_USE_XZ := true  # xz: recovery.img was at 99.8% of the 32 MiB partition
 
 # Recovery
 $(INSTALLED_RECOVERYIMAGE_TARGET): $(INSTALLED_DTBIMAGE_TARGET)
@@ -119,3 +125,9 @@ BOARD_ODM_SEPOLICY_DIRS += \
 # VINTF
 DEVICE_MANIFEST_FILE := \
     $(DEVICE_PATH)/vintf/manifest.xml
+
+# Sensors HAL backends: nanohub (+ IIO) instead of the qcom-common-ext libssc backend (no SSC on
+# msm8994). Must live here: product makefiles inherited by device.mk are evaluated after it.
+$(call soong_config_set_string_list,sensors_hal_mainline,include_custom_backends,//device/huawei/angler_mainline:libsensors_ext_nanohub)
+$(call soong_config_set,sensors_hal_mainline,load_custom_backends,nanohub$(comma)iio)
+$(call soong_config_set_bool,libsensors_libssc,enabled,false)
