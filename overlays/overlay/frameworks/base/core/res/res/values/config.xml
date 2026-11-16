@@ -21,4 +21,10 @@
     <!-- Whether a software navigation bar should be shown. NOTE: in the future this may be
          autodetected from the Configuration. -->
     <bool name="config_showNavigationBar">true</bool>
+
+    <!-- PMI8994 RGB LED (red/green/blue:status) drives notifications and battery -->
+    <bool name="config_intrusiveNotificationLed">true</bool>
+    <!-- Fingerprint navigation gestures (uinput-fpc -> SYSTEM_NAVIGATION_*): swipe for notifications -->
+    <bool name="config_supportSystemNavigationKeys">true</bool>
+    <bool name="config_fingerprintSupportsGestures">true</bool>
 </resources>

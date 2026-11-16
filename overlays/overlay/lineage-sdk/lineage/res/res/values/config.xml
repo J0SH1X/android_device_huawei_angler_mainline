@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     SPDX-FileCopyrightText: The LineageOS Project
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- RGB notification LED (1) + RGB battery LED (2) + pulsating (8) + battery LED (64) -->
+    <integer name="config_deviceLightCapabilities">75</integer>
+</resources>
